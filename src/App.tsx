@@ -13,6 +13,7 @@ export function App() {
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
+  const [currentEmployeeId, setCurrentEmployeeId] = useState("all");
 
   const transactions = useMemo(
     () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
@@ -64,7 +65,7 @@ export function App() {
             if (newValue === null) {
               return
             }
-
+            setCurrentEmployeeId(newValue.id)
             await loadTransactionsByEmployee(newValue.id)
 
             if (newValue.id === "all"){
@@ -83,7 +84,11 @@ export function App() {
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
               onClick={async () => {
-                await loadAllTransactions()
+                if (currentEmployeeId === "all"){
+                  await loadAllTransactions()
+                } else {
+                  await loadTransactionsByEmployee(currentEmployeeId)
+                }
               }}
             >
               View More
