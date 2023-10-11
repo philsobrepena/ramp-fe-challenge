@@ -12,7 +12,8 @@ export function App() {
   const { data: employees, ...employeeUtils } = useEmployees()
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
-  const [isLoading, setIsLoading] = useState(false)
+  const [employeesLoading, setEmployeesLoading] = useState(false)
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [currentEmployeeId, setCurrentEmployeeId] = useState("all");
 
   const transactions = useMemo(
@@ -21,14 +22,21 @@ export function App() {
   )
 
   const loadAllTransactions = useCallback(async () => {
-    setIsLoading(true)
+    setTransactionsLoading(true)
     transactionsByEmployeeUtils.invalidateData()
 
-    await employeeUtils.fetchAll()
     await paginatedTransactionsUtils.fetchAll()
 
-    setIsLoading(false)
-  }, [employeeUtils, paginatedTransactionsUtils, transactionsByEmployeeUtils])
+    setTransactionsLoading(false)
+  }, [paginatedTransactionsUtils, transactionsByEmployeeUtils])
+
+  const loadAllEmployees = useCallback(async () => {
+    setEmployeesLoading(true)
+
+    await employeeUtils.fetchAll()
+
+    setEmployeesLoading(false)
+  }, [employeeUtils])
 
   const loadTransactionsByEmployee = useCallback(
     async (employeeId: string) => {
@@ -41,8 +49,9 @@ export function App() {
   useEffect(() => {
     if (employees === null && !employeeUtils.loading) {
       loadAllTransactions()
+      loadAllEmployees()
     }
-  }, [employeeUtils.loading, employees, loadAllTransactions])
+  }, [employeeUtils.loading, employees,loadAllEmployees, loadAllTransactions])
 
   return (
     <Fragment>
@@ -52,7 +61,7 @@ export function App() {
         <hr className="RampBreak--l" />
 
         <InputSelect<Employee>
-          isLoading={isLoading}
+          isLoading={employeesLoading}
           defaultValue={EMPTY_EMPLOYEE}
           items={employees === null ? [] : [EMPTY_EMPLOYEE, ...employees]}
           label="Filter by employee"
@@ -82,7 +91,7 @@ export function App() {
           {transactions !== null && (
             <button
               className="RampButton"
-              disabled={paginatedTransactionsUtils.loading}
+              disabled={paginatedTransactionsUtils.loading || transactionsLoading}
               onClick={async () => {
                 if (currentEmployeeId === "all"){
                   await loadAllTransactions()
