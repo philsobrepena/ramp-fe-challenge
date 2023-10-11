@@ -23,6 +23,7 @@ export function App() {
 
   const loadAllTransactions = useCallback(async () => {
     setTransactionsLoading(true)
+
     transactionsByEmployeeUtils.invalidateData()
 
     await paginatedTransactionsUtils.fetchAll()
@@ -88,7 +89,7 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} />
 
-          {transactions !== null && (
+          {paginatedTransactions && paginatedTransactions.nextPage && (
             <button
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading || transactionsLoading}
